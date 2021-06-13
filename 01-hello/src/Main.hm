@@ -3,4 +3,7 @@ module Main where
 import Prelude
 
 main :: IO ()
-main = print "Let there be Hamler, running on Erlang VM!"
+main = print $ "Hello " ++ message ++ " !" 
+
+message :: String
+message = "Hamler"

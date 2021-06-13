@@ -1,6 +1,11 @@
 module Test where
 
 import Prelude
+import Test.QuickCheck (TestGroup(..), runTest)
+
+import Test.Message as M
 
 main :: IO ()
-main = print "test hamler!"
+main = runTest $ TxG "hello" [
+  M.test
+]
