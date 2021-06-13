@@ -1,0 +1,23 @@
+module Main where
+
+import Prelude
+
+main :: IO ()
+main = go
+
+go :: Process ()
+go = do
+  self <- getSelf
+  pid <- spawn loop
+  pid ! (self, :ping)
+  receive
+    :pong -> println "Pong!"
+  pid ! :stop
+
+loop :: Process ()
+loop = receive
+  (from, :ping) -> do
+    println "Ping!"
+    from ! :pong
+    loop
+  :stop -> pure ()

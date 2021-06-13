@@ -1,0 +1,11 @@
+module Test where
+
+import Prelude
+import Test.QuickCheck (TestGroup(..), runTest)
+
+import Test.Ping as P
+
+main :: IO ()
+main = runTest $ TxG "Ping" [
+  P.test
+]
