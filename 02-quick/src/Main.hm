@@ -1,0 +1,17 @@
+module Main where
+
+import Prelude
+import System.Env (getEnv)
+import Data.String (split)
+
+main :: IO ()
+main = do
+  list <- getEnv "LIST"
+  let toBeSorted :: [Integer]
+      toBeSorted = map read $ split list ","
+  println $ (show toBeSorted) ++ ": " ++ (show (quickSort toBeSorted))
+
+quickSort :: forall a. Ord a => [a] -> [a]
+quickSort [] = []
+quickSort [a|as] = quickSort [x|x <- as, x < a] ++ [a] ++ quickSort [x|x <- as, x >= a]
+
