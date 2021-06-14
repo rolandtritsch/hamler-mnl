@@ -1,0 +1,7 @@
+module Main where
+
+import Prelude
+import Demo.Server as DS
+
+main :: IO ()
+main = DS.main

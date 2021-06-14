@@ -1,0 +1,98 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Demo.Server
+-- Copyright   :  (c) 2020 EMQ Technologies Co., Ltd.
+-- License     :  BSD-style (see the LICENSE file)
+--
+-- Maintainer  :  Feng Lee, feng@emqx.io
+--                Yang M, yangm@emqx.io
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- The GenServer Demo.
+--
+-----------------------------------------------------------------------------
+module Demo.Server (start, inc, dec, query, main) where
+
+import Prelude
+import Control.Behaviour.GenServer
+  ( class GenServer
+  , HandleCall
+  , HandleCast
+  , Init
+  , startLinkWith
+  , initOk
+  , call
+  , cast
+  , noReply
+  , reply
+  , shutdown
+  )
+import System.IO (println)
+
+data Request = Inc | Dec | Query
+
+data Reply = QueryResult Integer
+
+data State = State Integer
+
+name :: Atom
+name = :server
+
+start :: Process Pid
+start = startLinkWith name (init 20)
+
+-----------------------------------------------------------------------------
+-- | Server API
+-----------------------------------------------------------------------------
+
+inc :: Process ()
+inc = cast name Inc
+
+dec :: Process ()
+dec = cast name Dec
+
+query :: Process Integer
+query = do
+  QueryResult i <- call name Query
+  pure i
+
+-----------------------------------------------------------------------------
+-- | Server callbacks
+-----------------------------------------------------------------------------
+
+instance GenServer Request Reply State where
+  handleCall = handleCall
+  handleCast = handleCast
+
+init :: Integer -> Init Request State
+init n = initOk (State n)
+
+handleCall :: HandleCall Request Reply State
+handleCall Query _from (State i) = do
+  println "Call: Query"
+  reply (QueryResult i) (State i)
+handleCall _req _from st =
+  shutdown :badRequest st
+
+handleCast :: HandleCast Request Reply State
+handleCast Inc (State n) = do
+  println "Cast: Inc"
+  noReply $ State (n+1)
+handleCast Dec (State n) = do
+  println "Cast: Dec"
+  noReply $ State (n-1)
+handleCast _ st = noReply st
+
+-----------------------------------------------------------------------------
+-- | main
+-----------------------------------------------------------------------------
+
+main :: IO ()
+main = do
+  start
+  inc
+  inc
+  dec
+  reply <- query
+  printf "%d" reply
