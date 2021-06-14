@@ -1,0 +1,7 @@
+module Main where
+
+import Prelude
+import Demo.Event as ES
+
+main :: IO ()
+main = ES.main
