@@ -94,6 +94,5 @@ main = do
   inc
   inc
   dec
-  --reply <- query
-  let reply = 10
+  reply <- query
   printf "%d" reply
