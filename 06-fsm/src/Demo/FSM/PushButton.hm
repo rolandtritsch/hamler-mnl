@@ -1,0 +1,77 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Demo.FSM.PushButton
+-- Copyright   :  (c) 2020 EMQ Technologies Co., Ltd.
+-- License     :  BSD-style (see the LICENSE file)
+--
+-- Maintainer  :  Feng Lee, feng@emqx.io
+--                Yang M, yangm@emqx.io
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- The GenStatem Demo.
+--
+-----------------------------------------------------------------------------
+module Demo.FSM.PushButton
+  ( State
+  , name
+  , start
+  , push
+  , getCount
+  , stop
+  ) where
+
+import Prelude
+import Control.Behaviour.GenStatem
+  ( class GenStatem
+  , EventType(..)
+  , Init
+  , HandleEvent
+  , replyTo
+  , unhandled
+  )
+import Control.Behaviour.GenStatem as FSM
+
+data Event = Push | GetCount
+data State = On | Off
+data Data = Data Integer
+
+instance GenStatem Event State Data where
+  handleEvent = handleEvent
+
+name :: Atom
+name = :pushbutton_statem
+
+start :: Process Pid
+start = FSM.startLinkWith name init
+
+push :: Process State
+push = FSM.call name Push
+
+getCount :: Process Integer
+getCount = FSM.call name GetCount
+
+stop :: Process ()
+stop = FSM.stop name
+
+init :: Init Event State Data
+init = FSM.initOk Off (Data 0)
+
+handleEvent :: HandleEvent Event State Data
+handleEvent (Call from) Push Off d = do
+  replyTo from On
+  FSM.next On (inc d)
+
+handleEvent (Call from) Push On d = do
+  replyTo from Off
+  FSM.next Off d
+
+handleEvent (Call from) GetCount s d@(Data i) = do
+  replyTo from i
+  FSM.keep d
+
+handleEvent t e s d = unhandled t e s d
+
+inc :: Data -> Data
+inc (Data i) = Data (i+1)
+

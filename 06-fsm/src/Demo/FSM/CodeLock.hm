@@ -1,0 +1,124 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Demo.FSM.CodeLock
+-- Copyright   :  (c) 2020 EMQ Technologies Co., Ltd.
+-- License     :  BSD-style (see the LICENSE file)
+--
+-- Maintainer  :  Feng Lee, feng@emqx.io
+--                Yang M, yangm@emqx.io
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- The CodeLock FSM Demo.
+--
+-----------------------------------------------------------------------------
+module Demo.FSM.CodeLock
+  ( name
+  , start
+  , push
+  , Info
+  , read
+  , stop
+  , Buttons
+  ) where
+
+import Prelude
+
+import Control.Behaviour.GenStatem
+  ( class GenStatem
+  , Action(..)
+  , EventType(..)
+  , Init
+  , OnEvent
+  , initOk
+  , handleWith
+  , replyTo
+  )
+import Control.Behaviour.GenStatem as FSM
+
+type Buttons = [Integer]
+
+data Event = Button Integer | Lock | Read
+data State = Locked | Opened
+data Data = Data
+  { code :: Buttons
+  , length :: Integer
+  , buttons :: Buttons
+  }
+type Info =
+  { state :: Atom
+  , code :: Buttons
+  , length :: Integer
+  , buttons :: Buttons
+  }
+
+instance Eq State where
+  eq Locked Locked = true
+  eq Opened Opened = true
+  eq _ _ = false
+
+instance GenStatem Event State Data where
+  handleEvent = handleWith [(Locked, locked), (Opened, opened)]
+
+name :: Atom
+name = :code_lock
+
+start :: [Integer] -> Process Pid
+start code = FSM.startLinkWith name (init code)
+
+push :: Integer -> Process ()
+push n = FSM.cast name (Button n)
+
+read :: Process Info
+read = FSM.call name Read
+
+stop :: Process ()
+stop = FSM.stop name
+
+init :: [Integer] -> Init Event State Data
+init code = initOk Locked d
+  where d = Data $ { code = reverse code
+                   , length = length code
+                   , buttons = []
+                   }
+
+locked :: OnEvent Event State Data
+locked Cast (Button n) (Data d) =
+  let buttons = take d.length [n|d.buttons]
+   in if buttons == d.code then
+        let actions = [StateTimeout 1000 Lock] in
+            FSM.nextWith Opened (Data d{buttons = []}) actions
+      else FSM.keep (Data d{buttons = buttons})
+
+locked (Call from) Read d = do
+  replyTo from (info Locked d)
+  FSM.keep d
+
+locked t e d = unhandled t e d
+
+opened :: OnEvent Event State Data
+opened Cast (Button _) d = FSM.keep d
+
+opened Timeout Lock d = do
+  println "Timeout Lock"
+  FSM.next Locked d
+
+opened (Call from) Read d = do
+  replyTo from (info Opened d)
+  FSM.keep d
+
+opened t e d = unhandled t e d
+
+unhandled :: OnEvent Event State Data
+unhandled _ e d = do
+  printf "Unexpected Event: %s" (showAny e) :: IO ()
+  FSM.keep d
+
+info :: State -> Data -> Info
+info s (Data d) =
+  { state = (if s == Locked then :locked else :opened)
+  , code = d.code
+  , length = d.length
+  , buttons = d.buttons
+  }
+
