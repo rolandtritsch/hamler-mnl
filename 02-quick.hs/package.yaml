@@ -1,0 +1,46 @@
+name:                haskell-mnl
+version:             0.1.0.0
+github:              "rolandtritsch/hamler-mnl"
+license:             BSD3
+author:              "Roland Tritsch"
+maintainer:          "roland@tritsch.org"
+copyright:           "2021 Roland Tritsch"
+
+synopsis:            An implementation of quickSort for the Hamler MnL
+category:            Web
+
+description:         Please see the README on Github
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs:
+  - src
+  ghc-options:
+  - -O2
+  - -Wall -Werror
+
+executables:
+  haskell-mnl-exe:
+    main: Main.hs
+    source-dirs:
+    - app
+    ghc-options:
+    - -main-is Main.main
+    - -O2 -threaded
+    - -Wall -Werror
+    dependencies:
+    - haskell-mnl
+    - split
+
+tests:
+  haskell-mnl-test:
+    main: Spec.hs
+    source-dirs:
+    - test
+    ghc-options:
+    - -main-is Spec.run
+    dependencies:
+    - haskell-mnl
+    - hspec

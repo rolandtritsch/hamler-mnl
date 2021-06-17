@@ -1,0 +1,61 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           haskell-mnl
+version:        0.1.0.0
+synopsis:       An implementation for the Hamler MnL
+description:    Please see the README on Github
+category:       Web
+homepage:       https://github.com/rolandtritsch/hamler-mnl#readme
+bug-reports:    https://github.com/rolandtritsch/hamler-mnl/issues
+author:         Roland Tritsch
+maintainer:     roland@tritsch.org
+copyright:      2021 Roland Tritsch
+license:        BSD3
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/rolandtritsch/hamler-mnl
+
+library
+  exposed-modules:
+      QS
+  other-modules:
+      Paths_haskell_mnl
+  hs-source-dirs:
+      src
+  ghc-options: -O2 -Wall -Werror
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+executable haskell-mnl-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_haskell_mnl
+  hs-source-dirs:
+      app
+  ghc-options: -main-is Main.main -O2 -threaded -Wall -Werror
+  build-depends:
+      base >=4.7 && <5
+    , haskell-mnl
+    , split
+  default-language: Haskell2010
+
+test-suite haskell-mnl-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_haskell_mnl
+  hs-source-dirs:
+      test
+  ghc-options: -main-is Spec.run
+  build-depends:
+      base >=4.7 && <5
+    , haskell-mnl
+    , hspec
+  default-language: Haskell2010
